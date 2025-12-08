@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { format } from 'date-fns';
 
 // Use local proxy path defined in vite.config.js
-const RSS_API_URL = '/rss-topics/top-picks.xml';
+const RSS_API_URL = '/rss-topics/it.xml';
 
 export const NewsWidget = () => {
     const [news, setNews] = useState([]);
