@@ -5,7 +5,16 @@ import tailwindcss from '@tailwindcss/vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
-    react(), 
-    tailwindcss(), 
+    react(),
+    tailwindcss(),
   ],
+  server: {
+    proxy: {
+      '/rss-topics': {
+        target: 'https://news.yahoo.co.jp',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/rss-topics/, '/rss/topics'),
+      },
+    },
+  },
 })

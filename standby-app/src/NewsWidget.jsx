@@ -2,25 +2,61 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { format } from 'date-fns';
 
-const RSS_URL = 'https://news.yahoo.co.jp/rss/topics/top-picks.xml';
-const API_URL = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(RSS_URL)}`;
+// Use local proxy path defined in vite.config.js
+const RSS_API_URL = '/rss-topics/top-picks.xml';
 
 export const NewsWidget = () => {
     const [news, setNews] = useState([]);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
     useEffect(() => {
         const fetchNews = async () => {
+            setLoading(true);
+            setError(null);
             try {
-                const response = await fetch(API_URL);
-                const data = await response.json();
-                if (data.items) {
-                    setNews(data.items);
-                    setLoading(false);
+                const response = await fetch(RSS_API_URL);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
-            } catch (error) {
-                console.error('Failed to fetch news:', error);
+                const textData = await response.text();
+
+                // Parse XML
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(textData, "text/xml");
+
+                const items = xmlDoc.querySelectorAll("item");
+                const newsItems = [];
+
+                items.forEach(item => {
+                    const title = item.querySelector("title")?.textContent;
+                    const pubDate = item.querySelector("pubDate")?.textContent;
+                    const link = item.querySelector("link")?.textContent;
+                    const guid = item.querySelector("guid")?.textContent;
+
+                    if (title) {
+                        newsItems.push({
+                            title,
+                            pubDate,
+                            link,
+                            guid: guid || link || title // Fallback ID
+                        });
+                    }
+                });
+
+                if (newsItems.length > 0) {
+                    setNews(newsItems);
+                } else {
+                    throw new Error('No news items found in RSS feed');
+                }
+
+            } catch (err) {
+                console.error('Failed to fetch news:', err);
+                if (news.length === 0) {
+                    setError('Unable to load news.');
+                }
+            } finally {
                 setLoading(false);
             }
         };
@@ -43,7 +79,7 @@ export const NewsWidget = () => {
         return () => clearInterval(rotateTimer);
     }, [news]);
 
-    if (loading) {
+    if (loading && news.length === 0) {
         return (
             <div className="w-full h-full flex items-center justify-center text-neutral-500 animate-pulse">
                 Loading News...
@@ -51,19 +87,31 @@ export const NewsWidget = () => {
         );
     }
 
-    const currentItem = news[currentIndex];
+    if (error && news.length === 0) {
+        return (
+            <div className="w-full h-full flex flex-col items-center justify-center text-neutral-500 gap-2">
+                <span className="text-red-500 font-bold">Error</span>
+                <span className="text-sm">{error}</span>
+            </div>
+        );
+    }
+
+    // Safety check
+    if (news.length === 0) return null;
+
+    const currentItem = news[currentIndex] || news[0];
 
     return (
         <div className="w-full h-full flex flex-col p-8 md:p-12 relative overflow-hidden">
             <div className="absolute top-8 left-8 flex items-center gap-3">
-                <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.5)]"></span>
-                <span className="text-neutral-400 text-sm font-semibold tracking-widest uppercase">Latest News</span>
+                <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.5)] z-20"></span>
+                <span className="text-neutral-400 text-sm font-semibold tracking-widest uppercase z-20">Latest News</span>
             </div>
 
             <div className="flex-1 flex flex-col justify-center z-10">
                 <AnimatePresence mode="wait">
                     <motion.div
-                        key={currentIndex}
+                        key={currentItem.guid || currentItem.title || currentIndex}
                         initial={{ opacity: 0, y: 20, filter: 'blur(10px)' }}
                         animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
                         exit={{ opacity: 0, y: -20, filter: 'blur(10px)' }}
@@ -76,7 +124,7 @@ export const NewsWidget = () => {
                         <div className="flex items-center justify-between text-neutral-500 mt-2">
                             <span className="text-sm md:text-base font-medium">Yahoo! News</span>
                             <span className="text-xs md:text-sm font-light">
-                                {format(new Date(currentItem.pubDate), 'HH:mm')}
+                                {currentItem.pubDate ? format(new Date(currentItem.pubDate), 'HH:mm') : ''}
                             </span>
                         </div>
                     </motion.div>
