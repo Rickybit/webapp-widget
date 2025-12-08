@@ -28,3 +28,12 @@ npm install motion @tailwindcss/vite date-fns
 ```bash
 npm run dev
 ```
+
+## 今後の予定
+1. ウィジェットを自動で表示するように実装   
+2. ニュースの表示をスクロール表示へ改善する  
+3. 天気の表示を実装する  
+4. メディアプレイヤーの表示  
+5. google calenderとの連携   
+6. 家の温度湿度の表示  
+7. mcpなどを用いたAIエージェントの実装  
