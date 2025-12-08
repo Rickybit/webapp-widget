@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { format } from 'date-fns';
-import { ja } from 'date-fns/locale';
+import { enUS } from 'date-fns/locale';
 import { FlipClock } from './FlipClock';
+import { NewsWidget } from './NewsWidget';
 
 const WidgetCard = ({ children, delay = 0 }) => {
   return (
@@ -42,21 +43,22 @@ export default function App() {
           <div className="z-10 w-full h-full flex items-center justify-center scale-75 md:scale-100 origin-center">
             <FlipClock />
           </div>
+          {/* Date Display: Bottom Left */}
+          <div className="absolute bottom-8 left-10 z-20">
+            <div className="text-3xl md:text-4xl font-light text-neutral-400 tracking-wide">
+              {format(time, 'MMMM d', { locale: enUS })}
+            </div>
+            <div className="text-lg text-neutral-600 font-medium uppercase tracking-[0.2em] mt-1">
+              {format(time, 'EEEE', { locale: enUS })}
+            </div>
+          </div>
         </WidgetCard>
 
-        {/* 右側：日付ウィジェット */}
+        {/* 右側：News Widget */}
         <WidgetCard delay={0.2}>
           <div className="absolute inset-0 bg-neutral-800 z-0" />
-          <div className="z-10 flex flex-col items-center justify-center h-full gap-8">
-            <div className="text-4xl md:text-6xl text-neutral-400 font-medium tracking-widest uppercase">
-              {format(time, 'yyyy', { locale: ja })}
-            </div>
-            <div className="text-8xl md:text-[10rem] font-bold text-white leading-none tracking-tighter">
-              {format(time, 'M.d', { locale: ja })}
-            </div>
-            <div className="text-5xl md:text-7xl font-light text-red-500 tracking-wider">
-              {format(time, 'EEEE', { locale: ja })}
-            </div>
+          <div className="z-10 w-full h-full">
+            <NewsWidget />
           </div>
         </WidgetCard>
 
