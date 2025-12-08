@@ -1,7 +1,10 @@
 # webapp-widget
 iphoneのスタンバイモードから着想を得たシンプルなウィジェット表示webアプリ  
 
-実装済みの機能はパタパタ時計とニュースの表示  
+実装済みの機能はパタパタ時計とニュースの表示 
+
+## 使用技術
+vite + react + tailwindcss + motion + date-fns
 
 ## 作り方
 
