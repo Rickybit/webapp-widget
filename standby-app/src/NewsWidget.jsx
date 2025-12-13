@@ -4,36 +4,6 @@ import { format } from 'date-fns';
 
 // Use local proxy path defined in vite.config.js
 const RSS_API_URL = '/rss-topics/it.xml';
-const WEATHER_API_URL = 'https://api.open-meteo.com/v1/forecast?latitude=35.6895&longitude=139.6917&current_weather=true';
-
-const WEATHER_CODES = {
-    0: 'Clear sky',
-    1: 'Mainly clear',
-    2: 'Partly cloudy',
-    3: 'Overcast',
-    45: 'Fog',
-    48: 'Depositing rime fog',
-    51: 'Drizzle: Light',
-    53: 'Drizzle: Moderate',
-    55: 'Drizzle: Dense',
-    61: 'Rain: Slight',
-    63: 'Rain: Moderate',
-    65: 'Rain: Heavy',
-    71: 'Snow: Slight',
-    73: 'Snow: Moderate',
-    75: 'Snow: Heavy',
-    77: 'Snow grains',
-    80: 'Rain showers: Slight',
-    81: 'Rain showers: Moderate',
-    82: 'Rain showers: Violent',
-    85: 'Snow showers: Slight',
-    86: 'Snow showers: Heavy',
-    95: 'Thunderstorm: Slight or moderate',
-    96: 'Thunderstorm with slight hail',
-    99: 'Thunderstorm with heavy hail',
-};
-
-const getWeatherDescription = (code) => WEATHER_CODES[code] || 'Unknown';
 
 export const NewsWidget = () => {
     // News State
@@ -103,18 +73,41 @@ export const NewsWidget = () => {
         return () => clearInterval(rotateTimer);
     }, [news]);
 
-    // Fetch Weather
+    // Fetch Weather from JMA
     useEffect(() => {
         const fetchWeather = async () => {
             setWeatherLoading(true);
             try {
-                const response = await fetch(WEATHER_API_URL);
+                // Determine timestamp: Current Japan time, minute = 00
+                const now = new Date();
+
+                // Format YYYYMMDDhh0000
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const day = String(now.getDate()).padStart(2, '0');
+                const hour = String(now.getHours()).padStart(2, '0');
+                const timestamp = `${year}${month}${day}${hour}0000`;
+
+                const JMA_URL = `https://www.jma.go.jp/bosai/amedas/data/map/${timestamp}.json`;
+                const stationCode = import.meta.env.VITE_AMEDAS_STATION_CODE || '34392'; // Default to Sendai if env missing
+
+                const response = await fetch(JMA_URL);
                 if (response.ok) {
                     const data = await response.json();
-                    setWeather({
-                        temp: data.current_weather.temperature,
-                        code: data.current_weather.weathercode
-                    });
+                    const stationData = data[stationCode];
+
+                    if (stationData && stationData.temp) {
+                        // temp is an array, 1st value is the one we want
+                        const tempValue = stationData.temp[0];
+                        setWeather({
+                            temp: tempValue,
+                        });
+                    } else {
+                        console.warn('Weather data not found for station:', stationCode);
+                    }
+                } else {
+                    console.warn('JMA data not available for timestamp:', timestamp);
+                    // Optional: Could implement fallback to previous hour here if needed
                 }
             } catch (err) {
                 console.error('Failed to fetch weather:', err);
@@ -124,7 +117,8 @@ export const NewsWidget = () => {
         };
 
         fetchWeather();
-        const weatherTimer = setInterval(fetchWeather, 1800000); // 30 mins
+        // Update every 1 hour as requested (matches the data update cycle which is hourly-ish for the map data usage pattern described)
+        const weatherTimer = setInterval(fetchWeather, 3600000);
         return () => clearInterval(weatherTimer);
     }, []);
 
@@ -144,6 +138,36 @@ export const NewsWidget = () => {
             </div>
         );
     }
+
+    // Determine background color based on temperature
+    const getBgColor = (temp) => {
+        if (temp === null || temp === undefined) return 'linear-gradient(135deg, #171717 0%, #000000 100%)';
+
+        let color;
+        if (temp <= -5.1) {
+            color = 'rgb(20, 20, 60)'; // Deep Icy Blue/Black
+        } else if (temp <= -0.1) {
+            color = 'rgb(60, 100, 180)'; // Frozen Blue
+        } else if (temp <= 4.9) {
+            color = 'rgb(0, 80, 160)'; // Cold Blue
+        } else if (temp <= 9.9) {
+            color = 'rgb(0, 120, 200)'; // Chilly Blue
+        } else if (temp <= 14.9) {
+            color = 'rgb(0, 160, 200)'; // Cool Light Blue
+        } else if (temp <= 19.9) {
+            color = 'rgb(0, 180, 140)'; // Teal/Fresh
+        } else if (temp <= 24.9) {
+            color = 'rgb(50, 180, 50)'; // Green/Comfortable
+        } else if (temp <= 29.9) {
+            color = 'rgb(240, 160, 0)'; // Orange/Warm
+        } else if (temp <= 34.9) {
+            color = 'rgb(255, 80, 0)'; // Red-Orange/Hot
+        } else {
+            color = 'rgb(180, 0, 104)'; // Extreme Hot (User Specified)
+        }
+
+        return `linear-gradient(135deg, ${color} 0%, #171717 100%)`;
+    };
 
     const currentItem = news[currentIndex] || news[0];
 
@@ -198,26 +222,29 @@ export const NewsWidget = () => {
             </div>
 
             {/* Page 2: Weather */}
-            <div className="w-full h-full snap-start flex flex-col p-8 md:p-12 relative bg-gradient-to-br from-blue-900 via-neutral-900 to-neutral-900 shrink-0">
+            <div
+                className="w-full h-full snap-start flex flex-col p-8 md:p-12 relative shrink-0 transition-colors duration-1000"
+                style={{ background: getBgColor(weather?.temp) }}
+            >
                 <div className="absolute top-8 left-8 flex items-center gap-3">
-                    <span className="text-blue-400 text-sm font-semibold tracking-widest uppercase z-20">Weather</span>
+                    <span className="text-white/60 text-sm font-semibold tracking-widest uppercase z-20">Weather</span>
                 </div>
 
                 <div className="flex-1 flex flex-col justify-center items-center text-center z-10 gap-4">
                     {weatherLoading ? (
-                        <div className="animate-pulse text-neutral-500">Loading Weather...</div>
+                        <div className="animate-pulse text-white/50">Loading Weather...</div>
                     ) : weather ? (
                         <>
-                            <div className="text-blue-200 text-lg font-medium tracking-widest uppercase mb-2">Tokyo</div>
+                            <div className="text-white/80 text-lg font-medium tracking-widest uppercase mb-2">Sendai</div>
                             <h2 className="text-5xl md:text-7xl font-bold text-white mb-2">
                                 {weather.temp}°
                             </h2>
-                            <p className="text-xl md:text-2xl text-blue-100 font-light">
-                                {getWeatherDescription(weather.code)}
+                            <p className="text-xl md:text-2xl text-white/80 font-light">
+                                Temperature
                             </p>
                         </>
                     ) : (
-                        <div className="text-neutral-500">Weather unavailable</div>
+                        <div className="text-white/50">Weather unavailable</div>
                     )}
                 </div>
             </div>
