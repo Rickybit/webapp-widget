@@ -1,7 +1,7 @@
 # webapp-widget
 iphoneのスタンバイモードから着想を得たシンプルなウィジェット表示webアプリ  
 
-実装済みの機能はパタパタ時計とニュースの表示
+実装した機能はパタパタ時計とニュースと天気の表示
 
 ![standby-app0](https://github.com/user-attachments/assets/74550360-f583-4a89-b3e7-227eee55e156)
 
@@ -28,6 +28,9 @@ npm install motion @tailwindcss/vite date-fns
 
 'vite.config.js' 'Tailwind CSS v4'を使うための設定をする
 
+.envファイルを用意し、VITE_AMEDAS_STATION_CODE=を設定する
+ここには、JMAのAMeDASの観測所コードを設定する
+
 
 ### 4. 開発サーバー起動（確認用）
 
@@ -36,10 +39,7 @@ npm run dev
 ```
 
 ## 今後の予定
-1. ウィジェットを自動で表示するように実装   
-2. ニュースの表示をスクロール表示へ改善する  
-3. 天気の表示を実装する  
-4. メディアプレイヤーの表示  
-5. google calenderとの連携   
-6. 家の温度湿度の表示  
-7. mcpなどを用いたAIエージェントの実装  
+1. メディアプレイヤーの実装  
+2. google calenderとの連携   
+3. 家の温度湿度の表示  
+4. mcpなどを用いたAIエージェントの実装  
