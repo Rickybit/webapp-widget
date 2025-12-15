@@ -38,6 +38,9 @@ npm install motion @tailwindcss/vite date-fns
 npm run dev
 ```
 
+また、天気の背景色については以下のサイトを参照  
+https://claude.ai/public/artifacts/6650b6a4-f4a2-407c-ba9a-6b9716accb4e
+
 ## 今後の予定
 1. メディアプレイヤーの実装  
 2. google calenderとの連携   
