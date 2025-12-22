@@ -73,41 +73,40 @@ export const NewsWidget = () => {
         return () => clearInterval(rotateTimer);
     }, [news]);
 
-    // Fetch Weather from JMA
+    // Fetch Weather from OpenWeather
     useEffect(() => {
         const fetchWeather = async () => {
+            console.log('Fetching weather...');
             setWeatherLoading(true);
             try {
-                // Determine timestamp: Current Japan time, minute = 00
-                const now = new Date();
+                const apiKey = import.meta.env.VITE_OPENWEATHER_API_KEY;
+                const city = import.meta.env.VITE_WEATHER_CITY || 'Sendai';
 
-                // Format YYYYMMDDhh0000
-                const year = now.getFullYear();
-                const month = String(now.getMonth() + 1).padStart(2, '0');
-                const day = String(now.getDate()).padStart(2, '0');
-                const hour = String(now.getHours()).padStart(2, '0');
-                const timestamp = `${year}${month}${day}${hour}0000`;
+                console.log('Weather Config:', { city, hasApiKey: !!apiKey });
 
-                const JMA_URL = `https://www.jma.go.jp/bosai/amedas/data/map/${timestamp}.json`;
-                const stationCode = import.meta.env.VITE_AMEDAS_STATION_CODE || '34392'; // Default to Sendai if env missing
+                if (!apiKey) {
+                    console.warn('OpenWeather API Key is missing');
+                    return;
+                }
 
-                const response = await fetch(JMA_URL);
+                const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${apiKey}`;
+
+                const response = await fetch(url);
+                console.log('Weather Response Status:', response.status);
+
                 if (response.ok) {
                     const data = await response.json();
-                    const stationData = data[stationCode];
+                    console.log('Weather Data Received:', data);
 
-                    if (stationData && stationData.temp) {
-                        // temp is an array, 1st value is the one we want
-                        const tempValue = stationData.temp[0];
+                    if (data.main && data.main.temp !== undefined) {
                         setWeather({
-                            temp: tempValue,
+                            temp: Math.round(data.main.temp * 10) / 10,
+                            condition: data.weather?.[0]?.main,
                         });
-                    } else {
-                        console.warn('Weather data not found for station:', stationCode);
                     }
                 } else {
-                    console.warn('JMA data not available for timestamp:', timestamp);
-                    // Optional: Could implement fallback to previous hour here if needed
+                    const errorData = await response.json().catch(() => ({}));
+                    console.warn('Weather data fetch failed:', response.status, errorData);
                 }
             } catch (err) {
                 console.error('Failed to fetch weather:', err);
@@ -117,8 +116,8 @@ export const NewsWidget = () => {
         };
 
         fetchWeather();
-        // Update every 1 hour as requested (matches the data update cycle which is hourly-ish for the map data usage pattern described)
-        const weatherTimer = setInterval(fetchWeather, 3600000);
+        // Update every 30 minutes
+        const weatherTimer = setInterval(fetchWeather, 1800000);
         return () => clearInterval(weatherTimer);
     }, []);
 
@@ -235,7 +234,9 @@ export const NewsWidget = () => {
                         <div className="animate-pulse text-white/50">Loading Weather...</div>
                     ) : weather ? (
                         <>
-                            <div className="text-white/80 text-lg font-medium tracking-widest uppercase mb-2">Sendai</div>
+                            <div className="text-white/80 text-lg font-medium tracking-widest uppercase mb-2">
+                                {import.meta.env.VITE_WEATHER_CITY || 'Sendai'}
+                            </div>
                             <h2 className="text-5xl md:text-7xl font-bold text-white mb-2">
                                 {weather.temp}°
                             </h2>
