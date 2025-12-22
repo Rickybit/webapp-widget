@@ -32,21 +32,6 @@ npm install motion @tailwindcss/vite date-fns
 ここには、OpenWeatherのAPIキーを設定する
 あとVITE_WEATHER_CITY=地域名を設定する
 
-### 4. Cloudflare Pages へのデプロイ
-
-Cloudflare Pages で動作させるには、以下の設定が必要です：
-
-#### 環境変数の設定
-Cloudflare のダッシュボードから、以下の環境変数を設定してください：
-- `VITE_OPENWEATHER_API_KEY`: OpenWeather の API キー
-- `VITE_WEATHER_CITY`: 地域名（例: `Sendai`）
-
-> [!IMPORTANT]
-> 設定後、必ず再ビルド（再デプロイ）を行ってください。Vite はビルド時に環境変数を埋め込みます。
-
-#### RSS プロキシ
-Cloudflare Pages では Vite のプロキシ設定が効かないため、`functions/rss-topics/[[path]].js` を作成してプロキシを実装しています。これにより、デプロイ後もニュースが正常に取得できます。
-
 ### 5. 開発サーバー起動（確認用）
 
 ```bash
@@ -55,6 +40,9 @@ npm run dev
 
 また、天気の背景色については以下のサイトを参照  
 https://claude.ai/public/artifacts/6650b6a4-f4a2-407c-ba9a-6b9716accb4e
+
+公開中のサイト  
+https://webapp-widget.pages.dev/
 
 ## 今後の予定
 1. メディアプレイヤーの実装  
