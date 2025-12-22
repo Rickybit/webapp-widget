@@ -27,7 +27,7 @@ npm install motion @tailwindcss/vite date-fns
 ### 3. 設定ファイルの修正
 
 'vite.config.js' 'Tailwind CSS v4'を使うための設定をする
-
+天気の情報についてはOpenWeatherを使用する
 .envファイルを用意し、VITE_OPENWEATHER_API_KEY=を設定する
 ここには、OpenWeatherのAPIキーを設定する
 あとVITE_WEATHER_CITY=地域名を設定する
