@@ -27,12 +27,27 @@ npm install motion @tailwindcss/vite date-fns
 ### 3. 設定ファイルの修正
 
 'vite.config.js' 'Tailwind CSS v4'を使うための設定をする
+天気の情報についてはOpenWeatherを使用する
+.envファイルを用意し、VITE_OPENWEATHER_API_KEY=を設定する
+ここには、OpenWeatherのAPIキーを設定する
+あとVITE_WEATHER_CITY=地域名を設定する
 
-.envファイルを用意し、VITE_AMEDAS_STATION_CODE=を設定する
-ここには、JMAのAMeDASの観測所コードを設定する
+### 4. Cloudflare Pages へのデプロイ
 
+Cloudflare Pages で動作させるには、以下の設定が必要です：
 
-### 4. 開発サーバー起動（確認用）
+#### 環境変数の設定
+Cloudflare のダッシュボードから、以下の環境変数を設定してください：
+- `VITE_OPENWEATHER_API_KEY`: OpenWeather の API キー
+- `VITE_WEATHER_CITY`: 地域名（例: `Sendai`）
+
+> [!IMPORTANT]
+> 設定後、必ず再ビルド（再デプロイ）を行ってください。Vite はビルド時に環境変数を埋め込みます。
+
+#### RSS プロキシ
+Cloudflare Pages では Vite のプロキシ設定が効かないため、`functions/rss-topics/[[path]].js` を作成してプロキシを実装しています。これにより、デプロイ後もニュースが正常に取得できます。
+
+### 5. 開発サーバー起動（確認用）
 
 ```bash
 npm run dev
