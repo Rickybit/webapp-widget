@@ -23,11 +23,13 @@ export const NewsWidget = () => {
             setNewsError(null);
             try {
                 const response = await fetch(RSS_API_URL);
+
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 const textData = await response.text();
                 const parser = new DOMParser();
                 const xmlDoc = parser.parseFromString(textData, "text/xml");
                 const items = xmlDoc.querySelectorAll("item");
+
                 const newsItems = [];
 
                 items.forEach(item => {
@@ -53,7 +55,7 @@ export const NewsWidget = () => {
                 }
             } catch (err) {
                 console.error('Failed to fetch news:', err);
-                if (news.length === 0) setNewsError('Unable to load news.');
+                if (news.length === 0) setNewsError(`Unable to load news.`);
             } finally {
                 setNewsLoading(false);
             }
@@ -76,13 +78,10 @@ export const NewsWidget = () => {
     // Fetch Weather from OpenWeather
     useEffect(() => {
         const fetchWeather = async () => {
-            console.log('Fetching weather...');
             setWeatherLoading(true);
             try {
                 const apiKey = import.meta.env.VITE_OPENWEATHER_API_KEY;
                 const city = import.meta.env.VITE_WEATHER_CITY || 'Sendai';
-
-                console.log('Weather Config:', { city, hasApiKey: !!apiKey });
 
                 if (!apiKey) {
                     console.warn('OpenWeather API Key is missing');
@@ -92,11 +91,9 @@ export const NewsWidget = () => {
                 const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&units=metric&appid=${apiKey}`;
 
                 const response = await fetch(url);
-                console.log('Weather Response Status:', response.status);
 
                 if (response.ok) {
                     const data = await response.json();
-                    console.log('Weather Data Received:', data);
 
                     if (data.main && data.main.temp !== undefined) {
                         setWeather({
@@ -105,8 +102,7 @@ export const NewsWidget = () => {
                         });
                     }
                 } else {
-                    const errorData = await response.json().catch(() => ({}));
-                    console.warn('Weather data fetch failed:', response.status, errorData);
+                    console.warn('Weather data fetch failed:', response.status);
                 }
             } catch (err) {
                 console.error('Failed to fetch weather:', err);
